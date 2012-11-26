@@ -1,3 +1,5 @@
+This fork's purpose is to extract markup from SlickGrid and encapsulate it in a pluggable templating framework.
+
 # Welcome to SlickGrid
 
 For now, please check out [the wiki](/mleibman/SlickGrid/wiki).
