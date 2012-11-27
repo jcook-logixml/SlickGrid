@@ -14,15 +14,25 @@
     });
   }
 
+  function styleToMap (str) {
+    var properties = str.split(";");
+    var map = {};
+    for (var p = 0, l = properties.length; p < l; p++) {
+      var pv = properties[p].split(":");
+      if (pv[0].length > 0) map[pv[0]] = pv[1];
+    }
+    return map;
+  }
+
   function Templating (options) {
     this.init(options);
   }
   Templating.prototype = {
     init: function (options) {
       this.options = options;
-      this.plugin = options.templatingPlugin;
-      this.decorations = $.extend(true, {}, this.decorations, this.options.templatingDecorations);
-      this.selectors = $.extend(true, {}, this.selectors, this.options.templatingSelectors);
+      this.plugin = options.templating ? options.templating.plugin : null;
+      this.decorations = options.templating ? $.extend(true, {}, this.decorations, options.templating.decorations): this.decorations;
+      this.selectors = options.templating ? $.extend(true, {}, this.selectors, options.templatingSelectors) : this.selectors;
     },
     getMarkup: function (name) {
       return this.plugin && this.plugin.getMarkup ? this.plugin.getMarkup(name) : this.defaultMarkup[name];
@@ -108,16 +118,16 @@
       }
     },
     defaultMarkup: {
-      focusSink: "<div tabIndex='0' hideFocus style='position:fixed;width:0;height:0;top:0;left:0;outline:0;'></div>",
-      headerScroller: "<div class='ui-state-default' style='overflow:hidden;position:relative;' />",
-      headers: "<div style='left:-1000px' />",
-      headerRowScroller: "<div class='ui-state-default' style='overflow:hidden;position:relative;' />",
+      focusSink: "<div tabIndex='0' />",
+      headerScroller: "<div class='ui-state-default' />",
+      headers: "<div />",
+      headerRowScroller: "<div class='ui-state-default' />",
       headerRow: "<div />",
-      headerRowSpacer: "<div style='display:block;height:1px;position:absolute;top:0;left:0;'></div>",
+      headerRowSpacer: "<div />",
       headerRowCell: "<div class='ui-state-default' />",
-      topPanelScroller: "<div class='ui-state-default' style='overflow:hidden;position:relative;' />",
-      topPanel: "<div style='width:10000px' />",
-      viewport: "<div style='width:100%;overflow:auto;outline:0;position:relative;;'>",
+      topPanelScroller: "<div class='ui-state-default' />",
+      topPanel: "<div />",
+      viewport: "<div />",
       canvas: "<div />",
 
       header: "<div class='ui-state-default' />",
@@ -130,24 +140,32 @@
       "cell-start": "<div class='{0}'>",
       "cell-end": "</div>",
 
-      measureScrollbar: "<div style='position:absolute; top:-10000px; left:-10000px; width:100px; height:100px; overflow:scroll;'></div>",
-      measureCellPaddingAndBorder: "<div class='ui-state-default' style='visibility:hidden'>-</div>",
+      measureScrollbar: "<div />",
+      measureCellPaddingAndBorder: "<div class='ui-state-default'>-</div>",
       "measureCellPaddingAndBorder-row": "<div />",
-      "measureCellPaddingAndBorder-cell": "<div id='' style='visibility:hidden'>-</div>",
-      getMaxSupportedCssHeight: "<div style='display:none' />",
+      "measureCellPaddingAndBorder-cell": "<div id=''>-</div>",
+      getMaxSupportedCssHeight: "<div />",
       createCssRules: "<style type='text/css' rel='stylesheet' />"
     },
     decorations: {
       viewport: {
-        "css": function () { return { "overflow-y": this.options.autoHeight ? "hidden" : "auto" }; },
+        "css": function () {
+          var results = styleToMap("width:100%;overflow:auto;outline:0;position:relative;");
+          results["overflow-y"] = this.options.autoHeight ? "hidden" : "auto";
+          return results;
+        },
         "addClass": function () {
           return this.getClass("viewport");
         }
       },
+      focusSink: {
+        "css": styleToMap("position:fixed;width:0;height:0;top:0;left:0;outline:0;")
+      },
       headerScroller: {
         "addClass": function () {
           return this.getClass("header");
-        }
+        },
+        "css": styleToMap("overflow:hidden;position:relative;")
       },
       header: {
         "addClass": function () {
@@ -162,27 +180,37 @@
       measureCellPaddingAndBorder: {
         "addClass": function () {
           return this.getClass("header-column");
-        }
+        },
+        "css": styleToMap("visibility:hidden")
       },
       "measureCellPaddingAndBorder-cell": {
         "addClass": function () {
           return this.getClass("cell");
-        }
+        },
+        "css": styleToMap("visibility:hidden")
       },
       "measureCellPaddingAndBorder-row": {
         "addClass": function () {
           return this.getClass("row");
         }
       },
+      measureScrollbar: {
+        "css": styleToMap("position:absolute; top:-10000px; left:-10000px; width:100px; height:100px; overflow:scroll;")
+      },
+      getMaxSupportedCssHeight: {
+        "css": styleToMap("display:none")
+      },
       headers: {
         "addClass": function () {
           return this.getClass("header-columns");
-        }
+        },
+        "css": styleToMap("left:-1000px")
       },
       headerRowScroller: {
         "addClass": function () {
           return this.getClass("headerrow");
-        }
+        },
+        "css": styleToMap("overflow:hidden;position:relative;")
       },
       headerRow: {
         "addClass": function () {
@@ -194,15 +222,20 @@
           return this.getClass("headerrow-column");
         }
       },
+      headerRowSpacer: {
+        "css": styleToMap("display:block;height:1px;position:absolute;top:0;left:0;")
+      },
       topPanelScroller: {
         "addClass": function () {
           return this.getClass("top-panel-scroller");
-        }
+        },
+        "css": styleToMap("overflow:hidden;position:relative;")
       },
       topPanel: {
         "addClass": function () {
           return this.getClass("top-panel");
-        }
+        },
+        "css": styleToMap("width:10000px")
       },
       canvas: {
         "addClass": function () {
