@@ -149,14 +149,10 @@
     },
     decorations: {
       viewport: {
-        "css": function () {
-          var results = styleToMap("width:100%;overflow:auto;outline:0;position:relative;");
-          results["overflow-y"] = this.options.autoHeight ? "hidden" : "auto";
-          return results;
-        },
         "addClass": function () {
           return this.getClass("viewport");
-        }
+        },
+        "css": styleToMap("width:100%;overflow:auto;outline:0;position:relative;")
       },
       focusSink: {
         "css": styleToMap("position:fixed;width:0;height:0;top:0;left:0;outline:0;")
