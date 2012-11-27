@@ -632,7 +632,7 @@ if (typeof Slick === "undefined") {
         }
 
         if (m.sortable) {
-          header.append(template.createElement("sort-indicator"));
+          header.append(templating.createElement("sort-indicator"));
         }
 
         trigger(self.onHeaderCellRendered, {
