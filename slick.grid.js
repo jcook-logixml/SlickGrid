@@ -304,8 +304,8 @@ if (typeof Slick === "undefined") {
         $headerScroller
             .bind("contextmenu", handleHeaderContextMenu)
             .bind("click", handleHeaderClick)
-            .delegate(".slick-header-column", "mouseenter", handleHeaderMouseEnter)
-            .delegate(".slick-header-column", "mouseleave", handleHeaderMouseLeave);
+            .delegate(templating.getSelector("header-column"), "mouseenter", handleHeaderMouseEnter)
+            .delegate(templating.getSelector("header-column"), "mouseleave", handleHeaderMouseLeave);
         $headerRowScroller
             .bind("scroll", handleHeaderRowScroll);
         $focusSink
@@ -319,8 +319,8 @@ if (typeof Slick === "undefined") {
             .bind("dragstart", handleDragStart)
             .bind("drag", handleDrag)
             .bind("dragend", handleDragEnd)
-            .delegate(".slick-cell", "mouseenter", handleMouseEnter)
-            .delegate(".slick-cell", "mouseleave", handleMouseLeave);
+            .delegate(templating.getSelector("cell"), "mouseenter", handleMouseEnter)
+            .delegate(templating.getSelector("cell"), "mouseleave", handleMouseLeave);
       }
     }
 
@@ -513,14 +513,14 @@ if (typeof Slick === "undefined") {
 
     function createColumnHeaders() {
       function hoverBegin() {
-        $(this).addClass("ui-state-hover");
+        $(this).addClass(templating.getClass("header-column:hover"));
       }
 
       function hoverEnd() {
-        $(this).removeClass("ui-state-hover");
+        $(this).removeClass(templating.getClass("header-column:hover"));
       }
 
-      $headers.find(".slick-header-column")
+      $headers.find(templating.getSelector("header-column"))
         .each(function() {
           var columnDef = $(this).data("column");
           if (columnDef) {
@@ -533,7 +533,7 @@ if (typeof Slick === "undefined") {
       $headers.empty();
       $headers.width(getHeadersWidth());
 
-      $headerRow.find(".slick-headerrow-column")
+      $headerRow.find(templating.getSelector("headerrow-column"))
         .each(function() {
           var columnDef = $(this).data("column");
           if (columnDef) {
@@ -595,11 +595,11 @@ if (typeof Slick === "undefined") {
         // temporary workaround for a bug in jQuery 1.7.1 (http://bugs.jquery.com/ticket/11328)
         e.metaKey = e.metaKey || e.ctrlKey;
 
-        if ($(e.target).hasClass("slick-resizable-handle")) {
+        if ($(e.target).hasClass(templating.getClass("resizable-handle"))) {
           return;
         }
 
-        var $col = $(e.target).closest(".slick-header-column");
+        var $col = $(e.target).closest(templating.getSelector("header-column"));
         if (!$col.length) {
           return;
         }
@@ -664,13 +664,13 @@ if (typeof Slick === "undefined") {
         cursor: "default",
         tolerance: "intersection",
         helper: "clone",
-        placeholder: "slick-sortable-placeholder ui-state-default slick-header-column",
+        placeholder: templating.getClass("sortable-placeholder") + " " + templating.getClass("placeholder-state") + " " + templating.getClass("header-column"), // slick-sortable-placeholder ui-state-default slick-header-column",
         forcePlaceholderSize: true,
         start: function (e, ui) {
-          $(ui.helper).addClass("slick-header-column-active");
+          $(ui.helper).addClass(templating.getClass("header-column:active"));
         },
         beforeStop: function (e, ui) {
-          $(ui.helper).removeClass("slick-header-column-active");
+          $(ui.helper).removeClass(templating.getClass("header-column:active"));
         },
         stop: function (e) {
           if (!getEditorLock().commitCurrentEdit()) {
@@ -695,7 +695,7 @@ if (typeof Slick === "undefined") {
     function setupColumnResize() {
       var $col, j, c, pageX, columnElements, minPageX, maxPageX, firstResizable, lastResizable;
       columnElements = $headers.children();
-      columnElements.find(".slick-resizable-handle").remove();
+      columnElements.find(templating.getSelector("resizable-handle")).remove();
       columnElements.each(function (i, e) {
         if (columns[i].resizable) {
           if (firstResizable === undefined) {
@@ -719,7 +719,7 @@ if (typeof Slick === "undefined") {
                 return false;
               }
               pageX = e.pageX;
-              $(this).parent().addClass("slick-header-column-active");
+              $(this).parent().addClass(templating.getClass("header-column:active"));
               var shrinkLeewayOnRight = null, stretchLeewayOnRight = null;
               // lock each column's width option to current width
               columnElements.each(function (i, e) {
@@ -845,7 +845,7 @@ if (typeof Slick === "undefined") {
             })
             .bind("dragend", function (e, dd) {
               var newWidth;
-              $(this).parent().removeClass("slick-header-column-active");
+              $(this).parent().removeClass(templating.getClass("header-column:active"));
               for (j = 0; j < columnElements.length; j++) {
                 c = columns[j];
                 newWidth = $(columnElements[j]).outerWidth();
@@ -903,11 +903,11 @@ if (typeof Slick === "undefined") {
       $style = templating.createElement("createCssRules").appendTo($("head"));
       var rowHeight = (options.rowHeight - cellHeightDiff);
       var rules = [
-        "." + uid + " .slick-header-column { left: 1000px; }",
-        "." + uid + " .slick-top-panel { height:" + options.topPanelHeight + "px; }",
-        "." + uid + " .slick-headerrow-columns { height:" + options.headerRowHeight + "px; }",
-        "." + uid + " .slick-cell { height:" + rowHeight + "px; }",
-        "." + uid + " .slick-row { height:" + options.rowHeight + "px; }"
+        "." + uid + " " + templating.getSelector("header-column") + " { left: 1000px; }",
+        "." + uid + " " + templating.getSelector("top-panel") + " { height:" + options.topPanelHeight + "px; }",
+        "." + uid + " " + templating.getSelector("headerrow-columns") + " { height:" + options.headerRowHeight + "px; }",
+        "." + uid + " " + templating.getSelector("cell") + " { height:" + rowHeight + "px; }",
+        "." + uid + " " + templating.getSelector("row") + " { height:" + options.rowHeight + "px; }"
       ];
 
       for (var i = 0; i < columns.length; i++) {
@@ -1119,7 +1119,7 @@ if (typeof Slick === "undefined") {
 
       var headerColumnEls = $headers.children();
       headerColumnEls
-          .removeClass("slick-header-column-sorted")
+          .removeClass(templating.getClass("header-column:sorted"))
           .find(".slick-sort-indicator")
               .removeClass("slick-sort-indicator-asc slick-sort-indicator-desc");
 
@@ -1130,9 +1130,9 @@ if (typeof Slick === "undefined") {
         var columnIndex = getColumnIndex(col.columnId);
         if (columnIndex != null) {
           headerColumnEls.eq(columnIndex)
-              .addClass("slick-header-column-sorted")
-              .find(".slick-sort-indicator")
-                  .addClass(col.sortAsc ? "slick-sort-indicator-asc" : "slick-sort-indicator-desc");
+              .addClass(templating.getClass("header-column:sorted"))
+              .find(templating.getSelector("sort-indicator"))
+                  .addClass(col.sortAsc ? templating.getClass("sort-indicator:asc") : templating.getClass("sort-indicator:desc"));
         }
       });
     }
@@ -1365,9 +1365,9 @@ if (typeof Slick === "undefined") {
     function appendRowHtml(stringArray, row, range) {
       var d = getDataItem(row);
       var dataLoading = row < getDataLength() && !d;
-      var rowCss = "slick-row" +
+      var rowCss = templating.getClass("row") +
           (dataLoading ? " loading" : "") +
-          (row === activeRow ? " active" : "") +
+          (row === activeRow ? " " + templating.getClass("active") : "") +
           (row % 2 == 1 ? " odd" : " even");
 
       var metadata = data.getItemMetadata && data.getItemMetadata(row);
@@ -1412,10 +1412,10 @@ if (typeof Slick === "undefined") {
     function appendCellHtml(stringArray, row, cell, colspan) {
       var m = columns[cell];
       var d = getDataItem(row);
-      var cellCss = "slick-cell l" + cell + " r" + Math.min(columns.length - 1, cell + colspan - 1) +
+      var cellCss = templating.getClass("cell") + " l" + cell + " r" + Math.min(columns.length - 1, cell + colspan - 1) +
           (m.cssClass ? " " + m.cssClass : "");
       if (row === activeRow && cell === activeCell) {
-        cellCss += (" active");
+        cellCss += (" " + templating.getClass("active"));
       }
 
       // TODO:  merge them together in the setter
@@ -2221,7 +2221,7 @@ if (typeof Slick === "undefined") {
     }
 
     function handleContextMenu(e) {
-      var $cell = $(e.target).closest(".slick-cell", $canvas);
+      var $cell = $(e.target).closest(templating.getSelector("cell"), $canvas);
       if ($cell.length === 0) {
         return;
       }
@@ -2263,13 +2263,13 @@ if (typeof Slick === "undefined") {
     }
 
     function handleHeaderContextMenu(e) {
-      var $header = $(e.target).closest(".slick-header-column", ".slick-header-columns");
+      var $header = $(e.target).closest(templating.getSelector("header-column"), templating.getSelector("header-columns"));
       var column = $header && $header.data("column");
       trigger(self.onHeaderContextMenu, {column: column}, e);
     }
 
     function handleHeaderClick(e) {
-      var $header = $(e.target).closest(".slick-header-column", ".slick-header-columns");
+      var $header = $(e.target).closest(templating.getSelector("header-column"), templating.getSelector("header-columns"));
       var column = $header && $header.data("column");
       if (column) {
         trigger(self.onHeaderClick, {column: column}, e);
@@ -2325,7 +2325,7 @@ if (typeof Slick === "undefined") {
     }
 
     function getCellFromEvent(e) {
-      var $cell = $(e.target).closest(".slick-cell", $canvas);
+      var $cell = $(e.target).closest(templating.getSelector("cell"), $canvas);
       if (!$cell.length) {
         return null;
       }
@@ -2395,9 +2395,9 @@ if (typeof Slick === "undefined") {
     function setActiveCellInternal(newCell, editMode) {
       if (activeCellNode !== null) {
         makeActiveCellNormal();
-        $(activeCellNode).removeClass("active");
+        $(activeCellNode).removeClass(templating.getClass("active"));
         if (rowsCache[activeRow]) {
-          $(rowsCache[activeRow].rowNode).removeClass("active");
+          $(rowsCache[activeRow].rowNode).removeClass(templating.getClass("active"));
         }
       }
 
@@ -2408,8 +2408,8 @@ if (typeof Slick === "undefined") {
         activeRow = getRowFromNode(activeCellNode.parentNode);
         activeCell = activePosX = getCellFromNode(activeCellNode);
 
-        $(activeCellNode).addClass("active");
-        $(rowsCache[activeRow].rowNode).addClass("active");
+        $(activeCellNode).addClass(templating.getClass("active"));
+        $(rowsCache[activeRow].rowNode).addClass(templating.getClass("active"));
 
         if (options.editable && editMode && isCellPotentiallyEditable(activeRow, activeCell)) {
           clearTimeout(h_editorLoader);
@@ -2471,7 +2471,7 @@ if (typeof Slick === "undefined") {
 
       if (activeCellNode) {
         var d = getDataItem(activeRow);
-        $(activeCellNode).removeClass("editable invalid");
+        $(activeCellNode).removeClass(templating.getClass("editable") + " " + templating.getClass("invalid"));
         if (d) {
           var column = columns[activeCell];
           var formatter = getFormatter(activeRow, column);
@@ -2513,7 +2513,7 @@ if (typeof Slick === "undefined") {
       }
 
       getEditorLock().activate(editController);
-      $(activeCellNode).addClass("editable");
+      $(activeCellNode).addClass(templating.getClass("editable"));
 
       // don't clear the cell if a custom editor is passed through
       if (!editor) {
@@ -3082,7 +3082,7 @@ if (typeof Slick === "undefined") {
             return !getEditorLock().isActive();
           } else {
             // TODO: remove and put in onValidationError handlers in examples
-            $(activeCellNode).addClass("invalid");
+            $(activeCellNode).addClass(templating.getClass("invalid"));
             $(activeCellNode).stop(true, true).effect("highlight", {color: "red"}, 300);
 
             trigger(self.onValidationError, {
