@@ -23,7 +23,6 @@
 </table>
 
 <script src="../lib/jquery-1.7.min.js"></script>
-<script src="../lib/jquery-ui-1.8.16.custom.min.js"></script>
 <script src="../lib/jquery.event.drag-2.0.min.js"></script>
 
 <script src="../slick.core.js"></script>
@@ -36,7 +35,7 @@
     { id: "duration", name: "Duration", field: "duration", sortable: true, formatter: dayFormatter },
     { id: "%", name: "% Complete", field: "percentComplete", sortable: true },
     { id: "start", name: "Start", field: "start", formatter: dateFormatter, sortable: true },
-    { id: "finish", name: "Finish", field: "finish", formatter: dateFormatter, sortable: true, visible: false },
+    { id: "finish", name: "Finish", field: "finish", formatter: dateFormatter, sortable: true },
     { id: "effort-driven", name: "Effort Driven", field: "effortDriven", sortable: true }
   ];
 
@@ -50,7 +49,7 @@
 
   var options = {
     enableCellNavigation: true,
-    enableColumnReorder: true,
+    enableColumnReorder: false,
     multiColumnSort: true
   };
 

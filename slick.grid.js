@@ -104,8 +104,7 @@ if (typeof Slick === "undefined") {
       minWidth: 30,
       rerenderOnResize: false,
       headerCssClass: null,
-      defaultSortAsc: true,
-      visible: true
+      defaultSortAsc: true
     };
 
     var defaultMarkup = {
@@ -271,7 +270,6 @@ if (typeof Slick === "undefined") {
       columnsById = {};
       for (var i = 0; i < columns.length; i++) {
         var m = columns[i] = $.extend({}, columnDefaults, columns[i]);
-        // if (!m.visible) { continue; } // allow this setting of property for the moment
         columnsById[m.id] = i;
         if (m.minWidth && m.width < m.minWidth) {
           m.width = m.minWidth;
@@ -449,7 +447,6 @@ if (typeof Slick === "undefined") {
     function getHeadersWidth() {
       var headersWidth = 0;
       for (var i = 0, ii = columns.length; i < ii; i++) {
-        if (columns[i].hidden) { continue; }
         var width = columns[i].width;
         headersWidth += width;
       }
@@ -462,7 +459,6 @@ if (typeof Slick === "undefined") {
       var rowWidth = 0;
       var i = columns.length;
       while (i--) {
-        if (columns[i].hidden) { continue; }
         rowWidth += columns[i].width;
       }
       return options.fullWidthRows ? Math.max(rowWidth, availableWidth) : rowWidth;
@@ -621,7 +617,6 @@ if (typeof Slick === "undefined") {
 
       for (var i = 0; i < columns.length; i++) {
         var m = columns[i];
-        if (!m.visible) { continue; }
 
         var header = templating.createElement("header")
             .attr("id", uid + m.id)
@@ -1094,7 +1089,6 @@ if (typeof Slick === "undefined") {
 
       for (i = 0; i < columns.length; i++) {
         c = columns[i];
-        if (!c.visible) { continue; }
         widths.push(c.width);
         total += c.width;
         if (c.resizable) {
@@ -1109,7 +1103,7 @@ if (typeof Slick === "undefined") {
         for (i = 0; i < columns.length && total > availWidth; i++) {
           c = columns[i];
           var width = widths[i];
-          if (!c.visible || !c.resizable || width <= c.minWidth || width <= absoluteColumnMinWidth) {
+          if (!c.resizable || width <= c.minWidth || width <= absoluteColumnMinWidth) {
             continue;
           }
           var absMinWidth = Math.max(c.minWidth, absoluteColumnMinWidth);
@@ -1131,7 +1125,7 @@ if (typeof Slick === "undefined") {
         var growProportion = availWidth / total;
         for (i = 0; i < columns.length && total < availWidth; i++) {
           c = columns[i];
-          if (!c.visible || !c.resizable || c.maxWidth <= c.width) {
+          if (!c.resizable || c.maxWidth <= c.width) {
             continue;
           }
           var growSize = Math.min(Math.floor(growProportion * c.width) - c.width, (c.maxWidth - c.width) || 1000000) || 1;
@@ -1146,12 +1140,10 @@ if (typeof Slick === "undefined") {
 
       var reRender = false;
       for (i = 0; i < columns.length; i++) {
-        c = columns[i];
-        if (!c.visible) { c.width = 0; continue; }
-        if (c.rerenderOnResize && c.width != widths[i]) {
+        if (columns[i].rerenderOnResize && columns[i].width != widths[i]) {
           reRender = true;
         }
-        c.width = widths[i];
+        columns[i].width = widths[i];
       }
 
       applyColumnHeaderWidths();
@@ -1176,17 +1168,15 @@ if (typeof Slick === "undefined") {
     }
 
     function applyColumnWidths() {
-      var x = 0, c, w, rule;
+      var x = 0, w, rule;
       for (var i = 0; i < columns.length; i++) {
-        c = columns[i];
-        if (!c.visible) { continue; }
-        w = c.width;
+        w = columns[i].width;
 
         rule = getColumnCssRules(i);
         rule.left.style.left = x + "px";
         rule.right.style.right = (canvasWidth - x - w) + "px";
 
-        x += c.width;
+        x += columns[i].width;
       }
     }
 
@@ -1251,13 +1241,11 @@ if (typeof Slick === "undefined") {
       // Pre-calculate cell boundaries.
       columnPosLeft = [];
       columnPosRight = [];
-      var x = 0, c;
+      var x = 0;
       for (var i = 0, ii = columns.length; i < ii; i++) {
-        c = columns[i];
-        if (!c.visible) { continue; }
         columnPosLeft[i] = x;
-        columnPosRight[i] = x + c.width;
-        x += c.width;
+        columnPosRight[i] = x + columns[i].width;
+        x += columns[i].width;
       }
     }
 
@@ -1267,7 +1255,6 @@ if (typeof Slick === "undefined") {
       columnsById = {};
       for (var i = 0; i < columns.length; i++) {
         var m = columns[i] = $.extend({}, columnDefaults, columns[i]);
-        if (!m.visible) { continue; }
         columnsById[m.id] = i;
         if (m.minWidth && m.width < m.minWidth) {
           m.width = m.minWidth;
@@ -1465,7 +1452,6 @@ if (typeof Slick === "undefined") {
       var colspan, m;
       for (var i = 0, ii = columns.length; i < ii; i++) {
         m = columns[i];
-        if (!m.visible) { continue; }
         colspan = 1;
         if (metadata && metadata.columns) {
           var columnData = metadata.columns[m.id] || metadata.columns[i];
@@ -1495,7 +1481,6 @@ if (typeof Slick === "undefined") {
 
     function appendCellHtml(stringArray, row, cell, colspan) {
       var m = columns[cell];
-      if (!m.visible) { return; }
       var d = getDataItem(row);
       var cellCss = templating.getClass("cell") + " l" + cell + " r" + Math.min(columns.length - 1, cell + colspan - 1) +
           (m.cssClass ? " " + m.cssClass : "");
@@ -1587,7 +1572,6 @@ if (typeof Slick === "undefined") {
       }
 
       var m = columns[cell], d = getDataItem(row);
-      if (!m.visible) { return; }
       if (currentEditor && activeRow === row && activeCell === cell) {
         currentEditor.loadValue(d);
       } else {
@@ -1613,7 +1597,6 @@ if (typeof Slick === "undefined") {
         var m = columns[columnIdx],
             d = getDataItem(row),
             node = cacheEntry.cellNodesByColumnIdx[columnIdx];
-        if (!m.visible) { continue; }
 
         if (row === activeRow && columnIdx === activeCell && currentEditor) {
           currentEditor.loadValue(d);
@@ -2081,7 +2064,6 @@ if (typeof Slick === "undefined") {
           columnIdx = columnIdx | 0;
 
           var m = columns[columnIdx];
-          if (!m.visible) { continue; }
           if (m.asyncPostRender && !postProcessedRows[row][columnIdx]) {
             var node = cacheEntry.cellNodesByColumnIdx[columnIdx];
             if (node) {
@@ -2382,7 +2364,7 @@ if (typeof Slick === "undefined") {
 
       var w = 0;
       for (var i = 0; i < columns.length && w < x; i++) {
-        w += columns[i].width || 0;
+        w += columns[i].width;
         cell++;
       }
 
@@ -2440,9 +2422,9 @@ if (typeof Slick === "undefined") {
       var y2 = y1 + options.rowHeight - 1;
       var x1 = 0;
       for (var i = 0; i < cell; i++) {
-        x1 += columns[i].width || 0;
+        x1 += columns[i].width;
       }
-      var x2 = x1 + columns[cell].width || 0;
+      var x2 = x1 + columns[cell].width;
 
       return {
         top: y1,
@@ -2562,7 +2544,6 @@ if (typeof Slick === "undefined") {
         $(activeCellNode).removeClass(templating.getClass("editable") + " " + templating.getClass("invalid"));
         if (d) {
           var column = columns[activeCell];
-          if (!column.visible) { return; }
           var formatter = getFormatter(activeRow, column);
           activeCellNode.innerHTML = formatter(activeRow, activeCell, getDataItemValueForColumn(d, column), column, getDataItem(activeRow));
           invalidatePostProcessingResults(activeRow);
@@ -2594,10 +2575,6 @@ if (typeof Slick === "undefined") {
       }
 
       var columnDef = columns[activeCell];
-      if (!columnDef.visible) {
-        return;
-      }
-
       var item = getDataItem(activeRow);
 
       if (trigger(self.onBeforeEditCell, {row: activeRow, cell: activeCell, item: item, column: columnDef}) === false) {
