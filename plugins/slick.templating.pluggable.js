@@ -30,16 +30,16 @@
   Templating.prototype = {
     init: function (options) {
       this.options = options;
-      this.plugin = options.templating ? options.templating.plugin : null;
+      this.plugin = options.templating ? new options.templating.plugin(options) : null;
       this.decorations = options.templating ? $.extend(true, {}, this.decorations, options.templating.decorations): this.decorations;
       this.selectors = options.templating ? $.extend(true, {}, this.selectors, options.templatingSelectors) : this.selectors;
     },
     getMarkup: function (name) {
-      return this.plugin && this.plugin.getMarkup ? this.plugin.getMarkup(name) : this.defaultMarkup[name];
+      return this.plugin && this.plugin.getMarkup ? this.plugin.getMarkup(name, this) : this.defaultMarkup[name];
     },
     getDecorations: function (name) {
       if (this.plugin && this.plugin.getDecorations) {
-        return this.plugin.getDecorations(name);
+        return this.plugin.getDecorations(name, this);
       } else {
         var decor = this.decorations[name];
         decor = $.isArray(decor) ? decor : (decor ? [decor] : []);
@@ -48,24 +48,24 @@
     },
     getClass: function (name) {
       if (this.plugin && this.plugin.getClass) {
-        return this.plugin.getClass(name);
+        return this.plugin.getClass(name, this);
       } else {
         return this.getSelector(name).replace(/\.([a-z]*)/,"$1");
       }
     },
     getSelector: function (name) {
-      return this.plugin && this.plugin.getSelector ? this.plugin.getSelector(name) : (this.selectors[name] ? this.selectors[name] : name);
+      return this.plugin && this.plugin.getSelector ? this.plugin.getSelector(name, this) : (this.selectors[name] ? this.selectors[name] : name);
     },
     addDecoration: function (name, decoration) {
       if (this.plugin && this.plugin.addDecoration) {
-        this.plugin.addDecoration(name, decoration);
+        this.plugin.addDecoration(name, decoration, this);
       } else {
         this.decorations[name] = this.getDecorations(name).push(decoration);
       }
     },
     decorateElement: function (element, name) {
       if (this.plugin && this.plugin.decorateElement) {
-        this.plugin.decorateElement(element, name);
+        this.plugin.decorateElement(element, name, this);
       } else {
         var decorations = this.getDecorations(name);
         for (var i = 0, l = decorations.length; i < l; i++) {
@@ -96,9 +96,16 @@
         }
       }
     },
+    appendTo: function ($element, stop) {
+      if (this.plugin && this.plugin.appendTo) {
+        return this.plugin.appendTo($element, stop);
+      } else {
+        return $element;
+      }
+    },
     createElement: function (name) {
       if (this.plugin && this.plugin.createElement) {
-        return this.plugin.createElement(name);
+        return this.plugin.createElement(name, this);
       } else {
         var markup = this.getMarkup(name);
         var element = $(markup);
@@ -108,7 +115,7 @@
     },
     createMarkup: function (name, data) {
       if (this.plugin && this.plugin.createMarkup) {
-        return this.plugin.createMarkup.apply(this, arguments);
+        return this.plugin.createMarkup.apply(this.plugin, [this].concat(Array.prototype.slice.call(arguments)));
       } else {
         var markup = this.getMarkup(name);
         var args = Array.prototype.slice.apply(arguments);

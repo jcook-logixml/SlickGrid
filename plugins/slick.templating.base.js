@@ -27,6 +27,9 @@
     getSelector: function (name) {
       return this.selectors[name] ? this.selectors[name] : name;
     },
+    appendTo: function ($element, stop) {
+      return $element;
+    },
     createElement: function (name) {
       var markup = this.getMarkup(name);
       var element = $(markup);

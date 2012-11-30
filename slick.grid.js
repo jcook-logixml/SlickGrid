@@ -62,6 +62,14 @@ if (typeof Slick === "undefined") {
    * @param {Object}            options     Grid options.
    **/
   function SlickGrid(container, data, columns, options) {
+    // mixins
+    $.extend(true, window, {
+      "Slick": {
+        "Templating": Slick.Templating || DefaultTemplating,
+        "ColumnReorder": Slick.ColumnReorder || DefaultColumnReorder
+      }
+    });
+
     // settings
     var defaults = {
       explicitInitialization: false,
@@ -105,6 +113,40 @@ if (typeof Slick === "undefined") {
       rerenderOnResize: false,
       headerCssClass: null,
       defaultSortAsc: true
+    };
+
+    var defaultColumnReorderSortableOptions = {
+      containment: "parent",
+      axis: "x",
+      cursor: "default",
+      tolerance: "intersection",
+      helper: "clone",
+      //has to be added after we have templating
+      //placeholder: templating.getClass("sortable-placeholder") + " " + templating.getClass("placeholder-state") + " " + templating.getClass("header-column"), // slick-sortable-placeholder ui-state-default slick-header-column",
+      forcePlaceholderSize: true,
+      start: function (e, ui) {
+        $(ui.helper).addClass(templating.getClass("header-column:active"));
+      },
+      beforeStop: function (e, ui) {
+        $(ui.helper).removeClass(templating.getClass("header-column:active"));
+      },
+      stop: function (e) {
+        if (!getEditorLock().commitCurrentEdit()) {
+          $(this).sortable("cancel");
+          return;
+        }
+
+        var reorderedIds = $headers.sortable("toArray");
+        var reorderedColumns = [];
+        for (var i = 0; i < reorderedIds.length; i++) {
+          reorderedColumns.push(columns[getColumnIndex(reorderedIds[i].replace(uid, ""))]);
+        }
+        setColumns(reorderedColumns);
+
+        trigger(self.onColumnsReordered, {});
+        e.stopPropagation();
+        setupColumnResize();
+      }
     };
 
     var defaultMarkup = {
@@ -257,7 +299,10 @@ if (typeof Slick === "undefined") {
       if ($container.length < 1) {
         throw new Error("SlickGrid requires a valid container, " + container + " does not exist in the DOM.");
       }
-      templating = Slick.Templating ? new Slick.Templating(options) : new gridTemplating();
+      templating = new Slick.Templating(options);
+
+      // set the placeholder property on the default column reorder sortable options, which requires templating
+      defaultColumnReorderSortableOptions.placeholder = templating.getClass("sortable-placeholder") + " " + templating.getClass("placeholder-state") + " " + templating.getClass("header-column");
 
       // calculate these only once and share between grid instances
       maxSupportedCssHeight = maxSupportedCssHeight || getMaxSupportedCssHeight();
@@ -301,21 +346,22 @@ if (typeof Slick === "undefined") {
         $container.css("position", "relative");
       }
 
-      $focusSink = templating.createElement("focusSink").appendTo($container);
+      $focusSink = templating.createElement("focusSink").appendTo(templating.appendTo($container));
 
-      $headerScroller = templating.createElement("headerScroller").appendTo($container);
-      $headers = templating.createElement("headers").appendTo($headerScroller);
+      $headerScroller = templating.createElement("headerScroller");
+      $headers = templating.createElement("headers").appendTo(templating.appendTo($headerScroller, true));
+      $headerScroller.appendTo(templating.appendTo($container));
       $headers.width(getHeadersWidth());
 
-      $headerRowScroller = templating.createElement("headerRowScroller").appendTo($container);
-      $headerRow = templating.createElement("headerRow").appendTo($headerRowScroller);
+      $headerRowScroller = templating.createElement("headerRowScroller");
+      $headerRow = templating.createElement("headerRow").appendTo(templating.appendTo($headerRowScroller, true));
+      $headerRowSpacer = templating.createElement("headerRowSpacer").appendTo(templating.appendTo($headerRowScroller, true));
+      $headerRowScroller.appendTo(templating.appendTo($container));
+      $headerRowSpacer.css("width", getCanvasWidth() + scrollbarDimensions.width + "px");
 
-      $headerRowSpacer = templating.createElement("headerRowSpacer")
-          .css("width", getCanvasWidth() + scrollbarDimensions.width + "px")
-          .appendTo($headerRowScroller);
-
-      $topPanelScroller = templating.createElement("topPanelScroller").appendTo($container);
-      $topPanel = templating.createElement("topPanel").appendTo($topPanelScroller);
+      $topPanelScroller = templating.createElement("topPanelScroller");
+      $topPanel = templating.createElement("topPanel").appendTo(templating.appendTo($topPanelScroller, true));
+      $topPanelScroller.appendTo(templating.appendTo($container));
 
       if (!options.showTopPanel) {
         $topPanelScroller.hide();
@@ -325,10 +371,11 @@ if (typeof Slick === "undefined") {
         $headerRowScroller.hide();
       }
 
-      $viewport = templating.createElement("viewport").appendTo($container);
+      $viewport = templating.createElement("viewport");
       $viewport.css("overflow-y", options.autoHeight ? "hidden" : "auto");
 
-      $canvas = templating.createElement("canvas").appendTo($viewport);
+      $canvas = templating.createElement("canvas").appendTo(templating.appendTo($viewport, true));
+      $viewport.appendTo(templating.appendTo($container));
 
       if (!options.explicitInitialization) {
         finishInitialization();
@@ -392,6 +439,10 @@ if (typeof Slick === "undefined") {
             .delegate(templating.getSelector("cell"), "mouseenter", handleMouseEnter)
             .delegate(templating.getSelector("cell"), "mouseleave", handleMouseLeave);
       }
+    }
+
+    function getUID() {
+      return uid;
     }
 
     function registerPlugin(plugin) {
@@ -620,20 +671,22 @@ if (typeof Slick === "undefined") {
 
         var header = templating.createElement("header")
             .attr("id", uid + m.id)
-            .append(templating.createElement("column-name").html(m.name))
             .width(m.width - headerColumnWidthDiff)
             .attr("title", m.toolTip || "")
             .data("column", m)
             .addClass(m.headerCssClass || "")
-            .appendTo($headers);
+            .appendTo(templating.appendTo($headers));
+
+        templating.createElement("column-name").html(m.name).appendTo(templating.appendTo(header));
 
         if (options.enableColumnReorder || m.sortable) {
           header.hover(hoverBegin, hoverEnd);
         }
 
         if (m.sortable) {
-          header.append(templating.createElement("sort-indicator"));
+          templating.createElement("sort-indicator").appendTo(templating.appendTo(header));
         }
+        templating.appendTo(header, true);
 
         trigger(self.onHeaderCellRendered, {
           "node": header[0],
@@ -644,7 +697,7 @@ if (typeof Slick === "undefined") {
           var headerRowCell = templating.createElement("headerRowCell")
               .addClass("l" + i + " r" + i)
               .data("column", m)
-              .appendTo($headerRow);
+              .appendTo(templating.appendTo($headerRow));
 
           trigger(self.onHeaderRowCellRendered, {
             "node": headerRowCell[0],
@@ -728,38 +781,7 @@ if (typeof Slick === "undefined") {
 
     function setupColumnReorder() {
       $headers.sortable("destroy");
-      $headers.sortable({
-        containment: "parent",
-        axis: "x",
-        cursor: "default",
-        tolerance: "intersection",
-        helper: "clone",
-        placeholder: templating.getClass("sortable-placeholder") + " " + templating.getClass("placeholder-state") + " " + templating.getClass("header-column"), // slick-sortable-placeholder ui-state-default slick-header-column",
-        forcePlaceholderSize: true,
-        start: function (e, ui) {
-          $(ui.helper).addClass(templating.getClass("header-column:active"));
-        },
-        beforeStop: function (e, ui) {
-          $(ui.helper).removeClass(templating.getClass("header-column:active"));
-        },
-        stop: function (e) {
-          if (!getEditorLock().commitCurrentEdit()) {
-            $(this).sortable("cancel");
-            return;
-          }
-
-          var reorderedIds = $headers.sortable("toArray");
-          var reorderedColumns = [];
-          for (var i = 0; i < reorderedIds.length; i++) {
-            reorderedColumns.push(columns[getColumnIndex(reorderedIds[i].replace(uid, ""))]);
-          }
-          setColumns(reorderedColumns);
-
-          trigger(self.onColumnsReordered, {});
-          e.stopPropagation();
-          setupColumnResize();
-        }
-      });
+      $headers.sortable(Slick.ColumnReorder(options, defaultColumnReorderSortableOptions));
     }
 
     function setupColumnResize() {
@@ -783,7 +805,7 @@ if (typeof Slick === "undefined") {
         }
         $col = $(e);
         templating.createElement("resizableHandle")
-            .appendTo(e)
+            .appendTo(templating.appendTo(e))
             .bind("dragstart", function (e, dd) {
               if (!getEditorLock().commitCurrentEdit()) {
                 return false;
@@ -945,7 +967,7 @@ if (typeof Slick === "undefined") {
       var h = ["borderLeftWidth", "borderRightWidth", "paddingLeft", "paddingRight"];
       var v = ["borderTopWidth", "borderBottomWidth", "paddingTop", "paddingBottom"];
 
-      el = templating.createElement("measureCellPaddingAndBorder").appendTo($headers);
+      el = templating.createElement("measureCellPaddingAndBorder").appendTo(templating.appendTo($headers));
       headerColumnWidthDiff = headerColumnHeightDiff = 0;
       $.each(h, function (n, val) {
         headerColumnWidthDiff += parseFloat(el.css(val)) || 0;
@@ -955,15 +977,18 @@ if (typeof Slick === "undefined") {
       });
       el.remove();
 
-      var r = templating.createElement("measureCellPaddingAndBorder-row").appendTo($canvas);
-      el = templating.createElement("measureCellPaddingAndBorder-cell").appendTo(r);
+      var r = templating.createElement("measureCellPaddingAndBorder-row").appendTo(templating.appendTo($canvas));
+      el = templating.createElement("measureCellPaddingAndBorder-cell").appendTo(templating.appendTo(r));
       cellWidthDiff = cellHeightDiff = 0;
-      $.each(h, function (n, val) {
-        cellWidthDiff += parseFloat(el.css(val)) || 0;
-      });
-      $.each(v, function (n, val) {
-        cellHeightDiff += parseFloat(el.css(val)) || 0;
-      });
+
+      if (el.css("box-sizing") != "border-box") {
+        $.each(h, function (n, val) {
+          cellWidthDiff += parseFloat(el.css(val)) || 0;
+        });
+        $.each(v, function (n, val) {
+          cellHeightDiff += parseFloat(el.css(val)) || 0;
+        });
+      }
       r.remove();
 
       absoluteColumnMinWidth = Math.max(headerColumnWidthDiff, cellWidthDiff);
@@ -3203,9 +3228,20 @@ if (typeof Slick === "undefined") {
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////
+    // Column Reorder Sortable Options
+
+    function DefaultColumnReorder (options, defaults) {
+      return $.extend(true, {}, defaults, options.columnReorder);
+    }
+
+    //////////////////////////////////////////////////////////////////////////////////////////////
     // Templating
 
-    function gridTemplating (options) {
+    function DefaultTemplating (options) {
+
+      function appendTo ($element, stop) {
+        return $element;
+      }
 
       function getClass (name) {
         return getSelector(name).replace(/\.([a-z]*)/,"$1");
@@ -3229,6 +3265,7 @@ if (typeof Slick === "undefined") {
 
       // API
       $.extend(this, {
+        "appendTo": appendTo,
         "getClass": getClass,
         "getSelector": getSelector,
         "createElement": createElement,
@@ -3303,6 +3340,7 @@ if (typeof Slick === "undefined") {
       "onCellCssStylesChanged": new Slick.Event(),
 
       // Methods
+      "getUID": getUID,
       "registerPlugin": registerPlugin,
       "unregisterPlugin": unregisterPlugin,
       "getColumns": getColumns,
