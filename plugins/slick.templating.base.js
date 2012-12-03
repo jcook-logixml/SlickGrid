@@ -18,6 +18,9 @@
     this.options = options;
   }
   Templating.prototype = {
+    init: function (grid, options) {
+      this.options = options;
+    },
     getMarkup: function (name) {
       return this.defaultMarkup[name];
     },

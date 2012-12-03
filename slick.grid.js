@@ -66,7 +66,7 @@ if (typeof Slick === "undefined") {
     $.extend(true, window, {
       "Slick": {
         "Templating": Slick.Templating || DefaultTemplating,
-        "ColumnReorder": Slick.ColumnReorder || DefaultColumnReorder
+        "ColumnReorder": Slick.ColumnOrder || DefaultColumnReorder
       }
     });
 
@@ -139,7 +139,7 @@ if (typeof Slick === "undefined") {
         var reorderedIds = $headers.sortable("toArray");
         var reorderedColumns = [];
         for (var i = 0; i < reorderedIds.length; i++) {
-          reorderedColumns.push(columns[getColumnIndex(reorderedIds[i].replace(uid, ""))]);
+          reorderedColumns.push(columns[getColumnIndex(getColumnId(reorderedIds[i]))]);
         }
         setColumns(reorderedColumns);
 
@@ -205,6 +205,7 @@ if (typeof Slick === "undefined") {
       "header-column:hover": ".ui-state-hover",
       "header-column:active": ".slick-header-column-active",
       "header-column:sorted": ".slick-header-column-sorted",
+      "header-column:sortable": ".slick-header-column",
 
       "sortable-placeholder": ".slick-sortable-placeholder",
       "sort-indicator": ".slick-sort-indicator",
@@ -447,7 +448,7 @@ if (typeof Slick === "undefined") {
 
     function registerPlugin(plugin) {
       plugins.unshift(plugin);
-      plugin.init(self);
+      plugin.init(self, options);
     }
 
     function unregisterPlugin(plugin) {
@@ -1098,6 +1099,10 @@ if (typeof Slick === "undefined") {
 
     function getEditController() {
       return editController;
+    }
+
+    function getColumnId(id) {
+      return id.replace(uid, "");
     }
 
     function getColumnIndex(id) {
@@ -3346,6 +3351,7 @@ if (typeof Slick === "undefined") {
       "getColumns": getColumns,
       "setColumns": setColumns,
       "getColumnIndex": getColumnIndex,
+      "getColumnId": getColumnId,
       "updateColumnHeader": updateColumnHeader,
       "setSortColumn": setSortColumn,
       "setSortColumns": setSortColumns,

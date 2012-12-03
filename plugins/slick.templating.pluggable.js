@@ -124,7 +124,7 @@
         return markup;
       }
     },
-    defaultMarkup: {
+    markup: {
       focusSink: "<div tabIndex='0' />",
       headerScroller: "<div class='ui-state-default' />",
       headers: "<div />",
@@ -280,6 +280,7 @@
       "header-column:hover": ".ui-state-hover",
       "header-column:active": ".slick-header-column-active",
       "header-column:sorted": ".slick-header-column-sorted",
+      "header-column:sortable": ".slick-header-column",
 
       "sortable-placeholder": ".slick-sortable-placeholder",
       "sort-indicator": ".slick-sort-indicator",
