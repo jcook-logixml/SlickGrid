@@ -41,7 +41,7 @@ if (typeof Slick === "undefined") {
   var maxSupportedCssHeight;  // browser's breaking point
 
   // utility function for generating strings using placeholders instead of concatenation
-  function sprintf (str, data) {
+  function sprintf (str) {
     var args = arguments;
     return str.replace(/\{(\d+)\}/g, function(match, number) {
         number = parseInt(number,10); 
@@ -1483,7 +1483,7 @@ if (typeof Slick === "undefined") {
       }
 
       // stringArray.push("<div class='ui-widget-content " + rowCss + "' style='top:" + (options.rowHeight * row - offset) + "px'>");
-      stringArray.push(templating.createMarkup("row-start", rowCss, options.rowHeight * row - offset));
+      stringArray.push(templating.createMarkup("row-start", [rowCss, options.rowHeight * row - offset]));
 
       var colspan, m;
       for (var i = 0, ii = columns.length; i < ii; i++) {
@@ -1531,7 +1531,7 @@ if (typeof Slick === "undefined") {
         }
       }
 
-      stringArray.push(templating.createMarkup("cell-start", cellCss));
+      stringArray.push(templating.createMarkup("cell-start", [cellCss]));
 
       // if there is a corresponding row (if not, this is the Add New row or this data hasn't been loaded yet)
       if (d) {
@@ -3280,12 +3280,8 @@ if (typeof Slick === "undefined") {
         return $(defaultMarkup[name]);
       }
 
-      function createMarkup (name) {
-        var markup = defaultMarkup[name];
-        var args = Array.prototype.slice.apply(arguments);
-        args.splice(0, 1, markup);
-        markup = sprintf.apply(this, args);
-        return markup;
+      function createMarkup (name, args) {
+        return !args ? defaultMarkup[name] : (args.unshift(defaultMarkup[name]) && sprintf.apply(this, args));
       }
 
       // API
@@ -3446,6 +3442,11 @@ if (typeof Slick === "undefined") {
     });
 
     init();
+
+    // API
+    $.extend(this, {
+      "templating": templating
+    });
   }
 
 }(jQuery));

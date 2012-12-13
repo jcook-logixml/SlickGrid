@@ -38,12 +38,8 @@
       var element = $(markup);
       return element;
     },
-    createMarkup: function (name, data) {
-      var markup = this.getMarkup(name);
-      var args = Array.prototype.slice.apply(arguments);
-      args.splice(0, 1, markup);
-      markup = sprintf.apply(this, args);
-      return markup;
+    createMarkup: function (name, args) {   
+        return !args ? this.getMarkup(name) : (args.unshift(this.getMarkup(name)) && sprintf.apply(this, args));
     },
     defaultMarkup: {
       focusSink: "<div tabIndex='0' hideFocus style='position:fixed;width:0;height:0;top:0;left:0;outline:0;'></div>",

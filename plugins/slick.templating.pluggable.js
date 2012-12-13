@@ -113,15 +113,11 @@
         return element;
       }
     },
-    createMarkup: function (name, data) {
+    createMarkup: function (name, args) {
       if (this.plugin && this.plugin.createMarkup) {
         return this.plugin.createMarkup.apply(this.plugin, [this].concat(Array.prototype.slice.call(arguments)));
       } else {
-        var markup = this.getMarkup(name);
-        var args = Array.prototype.slice.apply(arguments);
-        args.splice(0, 1, markup);
-        markup = sprintf.apply(this, args);
-        return markup;
+        return !args ? defaultMarkup[name] : (args.unshift(defaultMarkup[name]) && sprintf.apply(this, args));
       }
     },
     markup: {
