@@ -723,9 +723,12 @@ if (typeof Slick === "undefined") {
           return;
         }
 
-        var $col = $(e.target).closest(templating.getSelector("header-column"));
-        if (!$col.length) {
-          return;
+        var $col, heirarchy, selector;
+        for (heirarchy = ["header-column:sortable","header-column"]; selector = heirarchy.shift(); ) {
+            $col = $(e.target).closest(templating.getSelector(selector));
+            if (!$col.length) {
+              return;
+            }
         }
 
         var column = $col.data("column");
