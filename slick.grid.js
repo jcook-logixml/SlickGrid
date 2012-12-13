@@ -232,7 +232,7 @@ if (typeof Slick === "undefined") {
     var uid = "slickgrid_" + Math.round(1000000 * Math.random());
     var self = this;
     var templating;
-    var $focusSink;
+    var $focusSink, $focusSink2;
     var $headerScroller;
     var $headers;
     var $headerRow, $headerRowScroller, $headerRowSpacer;
@@ -251,6 +251,7 @@ if (typeof Slick === "undefined") {
     var absoluteColumnMinWidth;
     var numberOfRows = 0;
 
+    var tabbingDirection = 1;
     var activePosX;
     var activeRow, activeCell;
     var activeCellNode = null;
@@ -378,6 +379,8 @@ if (typeof Slick === "undefined") {
       $canvas = templating.createElement("canvas").appendTo(templating.appendTo($viewport, true));
       $viewport.appendTo(templating.appendTo($container));
 
+      $focusSink2 = $focusSink.clone().appendTo($container);
+
       if (!options.explicitInitialization) {
         finishInitialization();
       }
@@ -426,7 +429,7 @@ if (typeof Slick === "undefined") {
             .delegate(templating.getSelector("header-column"), "mouseleave", handleHeaderMouseLeave);
         $headerRowScroller
             .bind("scroll", handleHeaderRowScroll);
-        $focusSink
+        $focusSink.add($focusSink2)
             .bind("keydown", handleKeyDown);
         $canvas
             .bind("keydown", handleKeyDown)
@@ -784,7 +787,7 @@ if (typeof Slick === "undefined") {
     }
 
     function setupColumnReorder() {
-      $headers.sortable("destroy");
+      $headers.filter(":ui-sortable").sortable("destroy");
       $headers.sortable(Slick.ColumnReorder(options, defaultColumnReorderSortableOptions));
     }
 
@@ -2475,7 +2478,11 @@ if (typeof Slick === "undefined") {
     }
 
     function setFocus() {
-      $focusSink[0].focus();
+      if (tabbingDirection == -1) {
+        $focusSink[0].focus();
+      } else {
+        $focusSink2[0].focus();
+      }
     }
 
     function scrollCellIntoView(row, cell) {
@@ -3012,6 +3019,16 @@ if (typeof Slick === "undefined") {
         return true;
       }
       setFocus();
+
+      var tabbingDirections = {
+        "up": -1,
+        "down": 1,
+        "left": -1,
+        "right": 1,
+        "prev": -1,
+        "next": 1
+      };
+      tabbingDirection = tabbingDirections[dir];
 
       var stepFunctions = {
         "up": gotoUp,
